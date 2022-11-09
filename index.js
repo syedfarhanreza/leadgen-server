@@ -10,3 +10,7 @@ app.use(express.json());
 app.get('/', (req, res) =>{
     res.send('LeadGen server is  running')
 })
+
+app.listen(port, () => {
+    console.log(`LeadGen server running on ${port}`);
+})
