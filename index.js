@@ -30,17 +30,17 @@ function verifyJWT(req, res, next) {
         next();
     })
 }
-async function run(){
-    try{
+async function run() {
+    try {
         const serviceCollection = client.db('photography').collection('services');
 
         const reviewCollection = client.db("photography").collection("review");
 
         app.post('/jwt', (req, res) => {
             const user = req.body;
-            const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
-            res.send({token})
-            
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            res.send({ token })
+
         })
 
         app.get('/services', async (req, res) => {
@@ -64,19 +64,23 @@ async function run(){
             res.send(result);
         });
 
-        app.get("/reviews", async (req, res) => {
+        app.get("/reviews", verifyJWT, async (req, res) => {
+            const decoded = req.decoded;
+            // console.log(decoded);
+            if (decoded.email !== req.query.email) {
+                res.status(403).send({ message: 'unauthorized access' })
+            }
             let query = {};
             if (req.query.email) {
                 query = {
                     email: req.query.email
                 }
-
             }
             const cursor = reviewCollection.find(query);
             const services = await cursor.toArray();
             res.send(services);
         });
-        
+
         app.delete("/reviews/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -90,14 +94,14 @@ async function run(){
             res.send(result);
         });
     }
-    finally{
+    finally {
 
     }
 }
 run().catch(err => console.error(err))
 
 
-app.get('/', (req, res) =>{
+app.get('/', (req, res) => {
     res.send('LeadGen server is  running')
 })
 
